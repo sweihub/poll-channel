@@ -1,0 +1,13 @@
+[package]
+name = "poll-channel"
+version = "0.1.0"
+edition = "2021"
+repository = "https://github.com/sweihub/poll-channel"
+documentation = "https://docs.rs/poll-channel"
+description = "Poll on channel"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+crossbeam = { version = "0.8", features = ["crossbeam-channel"] }
