@@ -17,7 +17,7 @@ fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
     let _ = tx2.send(200);
     let mut i = 0;
 
-    while i < 3 {
+    while i < 4 {
         let id = poller.poll(0.01);
         if id == rx1.id() {
             let n1 = rx1.recv()?;
@@ -34,7 +34,7 @@ fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
         }
     }
 
-    assert!(i == 3);
+    assert!(i == 4);
 
     Ok(())
 }
