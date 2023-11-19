@@ -35,7 +35,4 @@ fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
 
     Ok(())
 }
-
 ```
-
-
