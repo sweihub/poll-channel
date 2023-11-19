@@ -20,7 +20,7 @@ fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
         let id = poller.poll(0.01);
         if id == rx1.id() {
             let n1 = rx1.recv()?;
-            assert!(n1 == 100 || n1 == 1000);
+            assert!(n1 == 100);
             i += 1;
         } else if id == rx2.id() {
             let n2 = rx2.recv()?;
