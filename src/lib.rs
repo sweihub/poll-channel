@@ -136,11 +136,6 @@ impl<T> Sender<T> {
         }
         return result;
     }
-
-    /// channel id
-    pub fn id(&self) -> i32 {
-        self.id
-    }
 }
 
 impl<T> Receiver<T> {
@@ -170,12 +165,19 @@ impl<T> Receiver<T> {
 }
 
 pub trait Pollable {
+    /// shared signal channel
     fn signal(&self) -> ArcMutex2<OptionSignal>;
+    /// channel id
+    fn id(&self) -> i32;
 }
 
 impl<T> Pollable for Receiver<T> {
     fn signal(&self) -> ArcMutex2<OptionSignal> {
         self.signal.clone()
+    }
+
+    fn id(&self) -> i32 {
+        self.id
     }
 }
 
