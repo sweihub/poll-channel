@@ -41,6 +41,11 @@ use std::{
     time::Duration,
 };
 
+pub use crossbeam::channel::RecvError;
+pub use crossbeam::channel::RecvTimeoutError;
+pub use crossbeam::channel::SendError;
+pub use crossbeam::channel::TryRecvError;
+
 pub struct Poll {
     signal: ArcMutex<OptionSignal>,
 }
@@ -112,7 +117,7 @@ impl<T> Clone for Sender<T> {
 }
 
 impl<T> Sender<T> {
-    pub fn send(&self, data: T) -> Result<(), crossbeam::channel::SendError<T>> {
+    pub fn send(&self, data: T) -> Result<(), SendError<T>> {
         // avoid mutable, no one races for the mutexes
         let mut init = self.init.lock().unwrap();
         let mut producer = self.producer.lock().unwrap();
@@ -144,7 +149,7 @@ impl<T> Receiver<T> {
         self.id
     }
 
-    pub fn recv(&self) -> Result<T, crossbeam::channel::RecvError> {
+    pub fn recv(&self) -> Result<T, RecvError> {
         self.rx.recv()
     }
 
@@ -155,7 +160,7 @@ impl<T> Receiver<T> {
         self.rx.recv_timeout(timeout)
     }
 
-    pub fn try_recv(&self) -> Result<T, crossbeam::channel::TryRecvError> {
+    pub fn try_recv(&self) -> Result<T, TryRecvError> {
         self.rx.try_recv()
     }
 
