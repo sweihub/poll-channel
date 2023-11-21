@@ -19,16 +19,16 @@
 //!    let mut i = 0;
 //!
 //!    while i < 3 {
-//!        let id = poller.poll(0.01);
-//!        if id == rx1.id() {
+//!        let tag = poller.poll(0.01);
+//!        if tag == rx1.tag() {
 //!            let n1 = rx1.recv()?;
 //!            assert!(n1 == 100);
 //!            i += 1;
-//!        } else if id == rx2.id() {
+//!        } else if tag == rx2.tag() {
 //!            let n2 = rx2.recv()?;
 //!            assert!(n2 == 200);
 //!            i += 1;
-//!        } else if id == -1 {
+//!        } else if tag == -1 {
 //!            // timeout
 //!            i += 1;
 //!            break;
@@ -77,7 +77,7 @@ static UID: Mutex<i32> = Mutex::new(0);
 pub struct Receiver<T> {
     signal: ArcMutex2<OptionSignal>,
     rx: crossbeam::channel::Receiver<T>,
-    id: i32,
+    tag: i32,
 }
 
 pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
@@ -90,7 +90,7 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
     let receiver = Receiver {
         signal,
         rx,
-        id: next,
+        tag: next,
     };
     let sender = Sender {
         producer: Mutex::new(None),
@@ -138,8 +138,8 @@ impl<T> Sender<T> {
 
 impl<T> Receiver<T> {
     /// channel id
-    pub fn id(&self) -> i32 {
-        self.id
+    pub fn tag(&self) -> i32 {
+        self.tag
     }
 
     pub fn recv(&self) -> Result<T, RecvError> {
@@ -166,7 +166,7 @@ pub trait Pollable {
     /// shared signal channel
     fn signal(&self) -> ArcMutex2<OptionSignal>;
     /// channel id
-    fn id(&self) -> i32;
+    fn tag(&self) -> i32;
 }
 
 impl<T> Pollable for Receiver<T> {
@@ -174,8 +174,8 @@ impl<T> Pollable for Receiver<T> {
         self.signal.clone()
     }
 
-    fn id(&self) -> i32 {
-        self.id
+    fn tag(&self) -> i32 {
+        self.tag
     }
 }
 
