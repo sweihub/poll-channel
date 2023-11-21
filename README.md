@@ -10,7 +10,9 @@ use poll_channel::{channel, Poll};
 fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
     let (tx1, rx1) = channel();
     let (tx2, rx2) = channel();
-    let poller = Poll::new(&[&rx1, &rx2]);
+
+    let poller = Poll::new();
+    poller.append([&rx1, &rx2]);
 
     let _ = tx1.send(100);
     let _ = tx2.send(200);

@@ -10,7 +10,9 @@
 //!fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
 //!    let (tx1, rx1) = channel();
 //!    let (tx2, rx2) = channel();
-//!    let poller = Poll::new(&[&rx1, &rx2]);
+//!
+//!    let poller = Poll::new();
+//!    poller.append([&rx1, &rx2]);
 //!
 //!    let _ = tx1.send(100);
 //!    let _ = tx2.send(200);
@@ -45,10 +47,6 @@ pub use crossbeam::channel::RecvError;
 pub use crossbeam::channel::RecvTimeoutError;
 pub use crossbeam::channel::SendError;
 pub use crossbeam::channel::TryRecvError;
-
-pub struct Poll {
-    signal: ArcMutex<OptionSignal>,
-}
 
 pub struct Signal {
     tx: crossbeam::channel::Sender<i32>,
@@ -181,16 +179,29 @@ impl<T> Pollable for Receiver<T> {
     }
 }
 
+pub struct Poll {
+    signal: ArcMutex<OptionSignal>,
+}
+
 impl Poll {
-    pub fn new<T: Pollable>(receivers: &[&T]) -> Self {
-        let signal = Signal::new();
-        let inner = Arc::new(Mutex::new(Some(signal)));
-        for i in receivers {
-            let outer = i.signal();
-            let mut value = outer.lock().unwrap();
-            *value = inner.clone();
-        }
+    pub fn new() -> Self {
+        let instance = Signal::new();
+        let inner = Arc::new(Mutex::new(Some(instance)));
         Self { signal: inner }
+    }
+
+    /// Append list of receivers
+    pub fn append<T: Pollable>(&self, receivers: &[&T]) {
+        for i in receivers {
+            self.add(*i);
+        }
+    }
+
+    /// Add single receiver
+    pub fn add<T: Pollable>(&self, receiver: &T) {
+        let outer = receiver.signal();
+        let mut inner = outer.lock().unwrap();
+        *inner = self.signal.clone();
     }
 
     /// Poll with decimal seconds timeout, return channel id, -1 for timeout.

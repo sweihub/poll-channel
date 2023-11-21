@@ -1,6 +1,6 @@
 [package]
 name = "poll-channel"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 repository = "https://github.com/sweihub/poll-channel"
 documentation = "https://docs.rs/poll-channel"

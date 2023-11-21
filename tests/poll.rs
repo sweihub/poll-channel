@@ -4,7 +4,9 @@ use poll_channel::{channel, Poll};
 fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
     let (tx1, rx1) = channel();
     let (tx2, rx2) = channel();
-    let poller = Poll::new(&[&rx1, &rx2]);
+
+    let poller = Poll::new();
+    poller.append(&[&rx1, &rx2]);
 
     // thread
     let tx1_clone = tx1.clone();
