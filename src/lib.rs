@@ -65,14 +65,14 @@ pub struct Sender<T> {
     producer: Mutex<Option<SignalSender>>,
     signal: ArcMutex2<OptionSignal>,
     tx: crossbeam::channel::Sender<T>,
-    id: i32,
+    tag: i32,
 }
 
 pub type SignalSender = crossbeam::channel::Sender<i32>;
 pub type OptionSignal = Option<Signal>;
 pub type ArcMutex<T> = Arc<Mutex<T>>;
 pub type ArcMutex2<T> = ArcMutex<ArcMutex<T>>;
-static UID: Mutex<i32> = Mutex::new(0);
+static TAG: Mutex<i32> = Mutex::new(0);
 
 pub struct Receiver<T> {
     signal: ArcMutex2<OptionSignal>,
@@ -84,7 +84,7 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
     let inner = Arc::new(Mutex::new(None));
     let signal = Arc::new(Mutex::new(inner));
     let (tx, rx) = crossbeam::channel::unbounded();
-    let mut id = UID.lock().unwrap();
+    let mut id = TAG.lock().unwrap();
     let next = *id;
     *id += 1;
     let receiver = Receiver {
@@ -96,7 +96,7 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
         producer: Mutex::new(None),
         signal: receiver.signal.clone(),
         tx,
-        id: next,
+        tag: next,
         init: Mutex::new(false),
     };
     (sender, receiver)
@@ -109,7 +109,7 @@ impl<T> Clone for Sender<T> {
             producer: Mutex::new(None),
             signal: self.signal.clone(),
             tx: self.tx.clone(),
-            id: self.id,
+            tag: self.tag,
         }
     }
 }
@@ -130,7 +130,7 @@ impl<T> Sender<T> {
         }
         let result = self.tx.send(data);
         if let Some(signal) = &*producer {
-            let _ = signal.send(self.id);
+            let _ = signal.send(self.tag);
         }
         return result;
     }
