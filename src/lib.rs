@@ -19,16 +19,16 @@
 //!    let mut i = 0;
 //!
 //!    while i < 3 {
-//!        let tag = poller.poll(0.01);
-//!        if tag == rx1.tag() {
+//!        let token = poller.poll(0.01);
+//!        if token == rx1.token() {
 //!            let n1 = rx1.recv()?;
 //!            assert!(n1 == 100);
 //!            i += 1;
-//!        } else if tag == rx2.tag() {
+//!        } else if token == rx2.token() {
 //!            let n2 = rx2.recv()?;
 //!            assert!(n2 == 200);
 //!            i += 1;
-//!        } else if tag == -1 {
+//!        } else if token == -1 {
 //!            // timeout
 //!            i += 1;
 //!            break;
@@ -65,38 +65,38 @@ pub struct Sender<T> {
     producer: Mutex<Option<SignalSender>>,
     signal: ArcMutex2<OptionSignal>,
     tx: crossbeam::channel::Sender<T>,
-    tag: i32,
+    token: i32,
 }
 
 pub type SignalSender = crossbeam::channel::Sender<i32>;
 pub type OptionSignal = Option<Signal>;
 pub type ArcMutex<T> = Arc<Mutex<T>>;
 pub type ArcMutex2<T> = ArcMutex<ArcMutex<T>>;
-static TAG: Mutex<i32> = Mutex::new(0);
+static TOKEN: Mutex<i32> = Mutex::new(0);
 
 pub struct Receiver<T> {
     signal: ArcMutex2<OptionSignal>,
     rx: crossbeam::channel::Receiver<T>,
-    tag: i32,
+    token: i32,
 }
 
 pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
     let inner = Arc::new(Mutex::new(None));
     let signal = Arc::new(Mutex::new(inner));
     let (tx, rx) = crossbeam::channel::unbounded();
-    let mut id = TAG.lock().unwrap();
-    let next = *id;
-    *id += 1;
+    let mut token = TOKEN.lock().unwrap();
+    let next = *token;
+    *token += 1;
     let receiver = Receiver {
         signal,
         rx,
-        tag: next,
+        token: next,
     };
     let sender = Sender {
         producer: Mutex::new(None),
         signal: receiver.signal.clone(),
         tx,
-        tag: next,
+        token: next,
         init: Mutex::new(false),
     };
     (sender, receiver)
@@ -109,7 +109,7 @@ impl<T> Clone for Sender<T> {
             producer: Mutex::new(None),
             signal: self.signal.clone(),
             tx: self.tx.clone(),
-            tag: self.tag,
+            token: self.token,
         }
     }
 }
@@ -130,7 +130,7 @@ impl<T> Sender<T> {
         }
         let result = self.tx.send(data);
         if let Some(signal) = &*producer {
-            let _ = signal.send(self.tag);
+            let _ = signal.send(self.token);
         }
         return result;
     }
@@ -138,8 +138,8 @@ impl<T> Sender<T> {
 
 impl<T> Receiver<T> {
     /// channel id
-    pub fn tag(&self) -> i32 {
-        self.tag
+    pub fn token(&self) -> i32 {
+        self.token
     }
 
     pub fn recv(&self) -> Result<T, RecvError> {
@@ -166,7 +166,7 @@ pub trait Pollable {
     /// shared signal channel
     fn signal(&self) -> ArcMutex2<OptionSignal>;
     /// channel id
-    fn tag(&self) -> i32;
+    fn token(&self) -> i32;
 }
 
 impl<T> Pollable for Receiver<T> {
@@ -174,8 +174,8 @@ impl<T> Pollable for Receiver<T> {
         self.signal.clone()
     }
 
-    fn tag(&self) -> i32 {
-        self.tag
+    fn token(&self) -> i32 {
+        self.token
     }
 }
 
