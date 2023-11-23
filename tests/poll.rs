@@ -20,16 +20,16 @@ fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
     let mut i = 0;
 
     while i < 4 {
-        let token = poller.poll(0.01);
-        if token == rx1.token() {
+        let id = poller.poll(0.01);
+        if id == rx1.id() {
             let n1 = rx1.recv()?;
             assert!(n1 == 100 || n1 == 1000);
             i += 1;
-        } else if token == rx2.token() {
+        } else if id == rx2.id() {
             let n2 = rx2.recv()?;
             assert!(n2 == 200);
             i += 1;
-        } else if token == -1 {
+        } else if id == -1 {
             // timeout
             i += 1;
             break;
