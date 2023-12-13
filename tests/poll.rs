@@ -40,3 +40,15 @@ fn poll_test() -> Result<(), crossbeam::channel::RecvError> {
 
     Ok(())
 }
+
+#[test]
+fn test_fixed_id() {
+    let (_tx, rx) = channel::<i32>();
+    assert!(rx.id() == 0);
+
+    let (_tx, rx) = channel::<i32>();
+    assert!(rx.id() == 1);
+
+    let (_tx, rx) = channel::<i32>();
+    assert!(rx.id() == 2);
+}
